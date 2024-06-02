@@ -29,6 +29,7 @@ async function run() {
 
         //dbCollections
         const userCollection = client.db("task-server").collection("users")
+        const taskCollection = client.db("task-server").collection("task")
 
 
         //users api
@@ -51,9 +52,14 @@ async function run() {
             }
 
             const result = await userCollection.insertOne({ user, role, coin })
-
             res.send(result)
+        })
 
+
+        //task
+        app.get('/task', async (req, res) => {
+            const result = await taskCollection.find().toArray();
+            res.send(result)
         })
 
 
