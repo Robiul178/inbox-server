@@ -61,6 +61,25 @@ async function run() {
             }
             const result = await userCollection.insertOne({ user, coin })
             res.send(result)
+        });
+
+        app.put('/users/updateCoin/:email', async (req, res) => {
+            const email = req.params.email;
+            const postCoin = req.body;
+            const taskAddCoin = postCoin.totalCost;
+            const coinUser = await userCollection.findOne({ 'user.email': email })
+            const userCoin = coinUser.coin;
+
+            const updateCoin = userCoin - taskAddCoin;
+
+            const filter = { 'user.email': email }
+            const updatedDocs = {
+                $set: {
+                    coin: updateCoin,
+                }
+            }
+            const result = await userCollection.updateOne(filter, updatedDocs)
+            res.send(result)
         })
 
 
@@ -68,6 +87,18 @@ async function run() {
         //task
         app.get('/task', async (req, res) => {
             const result = await taskCollection.find().toArray();
+            res.send(result)
+        })
+
+        app.get('/task/creatorEmail/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { creator_email: email };
+            const result = await taskCollection.find(query).toArray();
+            res.send(result)
+        })
+        app.post('/tasks', async (req, res) => {
+            const data = req.body;
+            const result = await taskCollection.insertOne(data)
             res.send(result)
         })
 
@@ -84,6 +115,14 @@ async function run() {
             const result = await submissionCollection.find(query).toArray();
             res.send(result)
         })
+
+        app.get('/user/creatorEmail/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { creator_email: email };
+            const result = await submissionCollection.find(query).toArray();
+            res.send(result)
+        })
+
         //withdrawCollection
         app.post('/withdraw', async (req, res) => {
             const data = req.body;
