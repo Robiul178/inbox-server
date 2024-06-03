@@ -30,16 +30,25 @@ async function run() {
         //dbCollections
         const userCollection = client.db("task-server").collection("users")
         const taskCollection = client.db("task-server").collection("task")
+        const submissionCollection = client.db("task-server").collection("mySubmission")
+        const withdrawCollection = client.db("task-server").collection("withdrawInfo")
 
 
         //users api
+        app.get('/users', async (req, res) => {
+            const result = await userCollection.find().toArray();
+            res.send(result);
+        })
+
+
         app.post('/users', async (req, res) => {
             const user = req.body;
             const role = user?.userRole.value;
             const email = user?.email;
 
-            if (!email || !role) {
-                return res.send('User Already Exist')
+            const existingUser = await userCollection.findOne({ 'user.email': email });
+            if (existingUser) {
+                return res.status(400).send('User already exists.');
             }
 
             let coin = 0;
@@ -50,10 +59,10 @@ async function run() {
             } else {
                 res.send('invalid role')
             }
-
-            const result = await userCollection.insertOne({ user, role, coin })
+            const result = await userCollection.insertOne({ user, coin })
             res.send(result)
         })
+
 
 
         //task
@@ -62,10 +71,25 @@ async function run() {
             res.send(result)
         })
 
+        //mysubmission
+        app.post('/mysubmission', async (req, res) => {
+            const data = req.body;
+            const result = await submissionCollection.insertOne(data);
+            res.send(result)
+        })
 
-
-
-
+        app.get('/user/email/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { worker_email: email };
+            const result = await submissionCollection.find(query).toArray();
+            res.send(result)
+        })
+        //withdrawCollection
+        app.post('/withdraw', async (req, res) => {
+            const data = req.body;
+            const result = await withdrawCollection.insertOne(data);
+            res.send(result)
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
