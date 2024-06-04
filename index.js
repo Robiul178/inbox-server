@@ -26,7 +26,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        // await client.connect();
+        await client.connect();
 
         //dbCollections
         const userCollection = client.db("task-server").collection("users")
@@ -86,6 +86,20 @@ async function run() {
             const result = await userCollection.insertOne({ user, coin })
             res.send(result)
         });
+
+        app.put('/user/newCoin/:email', async (req, res) => {
+            const email = req.params.email;
+            const data = req.body.newCoin;
+            const filter = { 'user.email': email };
+            const updatedDocs = {
+                $set: {
+                    coin: data,
+                }
+            }
+            const result = await userCollection.updateOne(filter, updatedDocs)
+            res.send(result)
+
+        })
 
         app.put('/users/updateCoin/:email', async (req, res) => {
             const email = req.params.email;
@@ -172,7 +186,19 @@ async function run() {
             const data = req.body;
             const result = await withdrawCollection.insertOne(data);
             res.send(result)
+        });
+
+
+        //payment history
+        app.get('/payment-history/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { buyer_email: email }
+            const result = await paymentHistory.find(query).toArray();
+            res.send(result)
         })
+
+
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
