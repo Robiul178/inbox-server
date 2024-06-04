@@ -107,6 +107,20 @@ async function run() {
             res.send(result)
         })
 
+        app.put("/task/:id", async (req, res) => {
+            const id = req.params.id;
+            const taskData = req.body;
+            const filter = { _id: new ObjectId(id) }
+            const options = { upsert: true };
+            const updateTask = {
+                $set: {
+                    ...taskData
+                }
+            }
+            const result = await taskCollection.updateOne(filter, updateTask, options)
+            res.send(result)
+        })
+
         //mysubmission
         app.post('/mysubmission', async (req, res) => {
             const data = req.body;
