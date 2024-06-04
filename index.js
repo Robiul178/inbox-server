@@ -10,6 +10,7 @@ app.use(cors())
 app.use(express.json())
 
 
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.pg5idq6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -25,13 +26,36 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         //dbCollections
         const userCollection = client.db("task-server").collection("users")
         const taskCollection = client.db("task-server").collection("task")
         const submissionCollection = client.db("task-server").collection("mySubmission")
         const withdrawCollection = client.db("task-server").collection("withdrawInfo")
+        const paymentHistory = client.db("task-server").collection("paymentHistory")
+
+
+        ///payment intent
+        app.post("/create-payment", async (req, res) => {
+            const { coinPrice } = req.body;
+            const ammount = parseInt(coinPrice * 100);
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: ammount,
+                currency: "usd",
+                payment_method_types: ["card"]
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+        })
+
+        app.post('/payment', async (req, res) => {
+            const payData = req.body;
+            const result = await paymentHistory.insertOne(payData);
+            res.send(result)
+        })
 
 
         //users api
@@ -80,6 +104,7 @@ async function run() {
             const result = await userCollection.updateOne(filter, updatedDocs)
             res.send(result)
         })
+
 
 
 
@@ -158,11 +183,6 @@ async function run() {
     }
 }
 run().catch(console.dir);
-
-
-
-
-
 
 
 
