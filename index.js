@@ -56,6 +56,19 @@ async function run() {
             const result = await paymentHistory.insertOne(payData);
             res.send(result)
         })
+        //payment history
+        app.get('/payment-history/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { buyer_email: email }
+            const result = await paymentHistory.find(query).toArray();
+            res.send(result)
+        })
+
+        app.get('/payments', async (req, res) => {
+            const result = await paymentHistory.find().toArray();
+            res.send(result)
+        })
+
 
 
         //users api
@@ -187,21 +200,15 @@ async function run() {
             const result = await withdrawCollection.insertOne(data);
             res.send(result)
         });
-
-
-        //payment history
-        app.get('/payment-history/:email', async (req, res) => {
-            const email = req.params.email;
-            const query = { buyer_email: email }
-            const result = await paymentHistory.find(query).toArray();
+        app.get('/withdrawCollection', async (req, res) => {
+            const result = await withdrawCollection.find().toArray();
             res.send(result)
         })
 
 
 
-
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 })
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
